@@ -1,0 +1,16 @@
+authors:
+  - family-names: Sinibaldi
+    given-names: Alessandro
+cff-version: 0.0.1
+message: "If you use this software, please cite the article from preferred-citation."
+title: tnqg
+url: "https://github.com/cqsl/tnqg"
+preferred-citation:
+  type: software
+  title: "tnqg package"
+  authors:
+    - family-names: Sinibaldi
+      given-names: Alessandro
+  year: 2026
+  doi: "10.5281/zenodo.18233288"
+  url: "https://doi.org/10.5281/zenodo.18233288"

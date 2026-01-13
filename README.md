@@ -3,6 +3,7 @@ This repository provides the accompanying code for the paper "Time-dependent Neu
 The code is based on `jax`, `flax` and `NetKet`.
 
 [![Slack](https://img.shields.io/badge/slack-chat-green.svg)](https://join.slack.com/t/mlquantum/shared_invite/zt-19wibmfdv-LLRI6i43wrLev6oQX0OfOw)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16941784.svg)](https://doi.org/10.5281/zenodo.18233288)
 
 ## Content of the repository
 
@@ -25,4 +26,20 @@ This package can be install directly from GitHub as:
 ```bash
 git clone https://github.com/cqsl/tnqg.git
 pip install -e ./tnqg
+```
+
+How to cite
+-----------
+
+If you use ``tnqg`` in your work, please consider citing it as:
+
+```
+@software{tnqg,
+    author = {Sinibaldi, Alessandro},
+    title = {tnqg package},
+    url = {https://github.com/cqsl/tnqg},
+    doi = {10.5281/zenodo.18233288},
+    version = {0.0.1},
+    year = {2026}
+    }
 ```
