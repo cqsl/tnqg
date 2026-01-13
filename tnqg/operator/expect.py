@@ -126,9 +126,10 @@ def expect_and_grad_inner(
 
     if not return_grad:
         loss_mean = 0
+        loss_error = 0
 
         def fill_many_losses(i, carry):
-            loss_mean = carry
+            (loss_mean, loss_error) = carry
 
             samples = jax.lax.dynamic_slice(
                 tσ, (i * window, 0, 0), (window, tσ.shape[-2], tσ.shape[-1])
@@ -138,23 +139,26 @@ def expect_and_grad_inner(
                 params, samples
             )
             loss_means = jnp.mean(loss_values, axis=-1)
+            loss_errors = jnp.std(loss_values, axis=-1) / jnp.sqrt(
+                loss_values.shape[-1]
+            )
 
             weights_simpson_ = jax.lax.dynamic_slice(
                 weights_simpson, (i * window,), (window,)
             )
 
             loss_mean += jnp.sum(dt * loss_means * weights_simpson_ / T)
+            loss_error += jnp.sum(dt * loss_errors * weights_simpson_ / T) ** 2
+            return loss_mean, loss_error
 
-            return loss_mean
-
-        loss_mean = jax.lax.fori_loop(
-            0, n_times // window, fill_many_losses, (loss_mean)
+        loss_mean, loss_error = jax.lax.fori_loop(
+            0, n_times // window, fill_many_losses, (loss_mean, loss_error)
         )
+        loss_error = jnp.sqrt(loss_error)
 
         loss_stats = Stats(
             mean=loss_mean,
-            error_of_mean=0,
-            variance=0,
+            error_of_mean=loss_error,
         )
 
         return loss_stats
@@ -168,6 +172,8 @@ def expect_and_grad_inner(
         log_pdf, vjp_pdf = nk.jax.vjp(log_pdf_fun, params, tσ, conjugate=True)
 
         loss_mean = jnp.mean(loss_values, axis=-1, keepdims=True)
+        loss_error = jnp.std(loss_values, axis=-1) / jnp.sqrt(loss_values.shape[-1])
+
         loss_values -= loss_mean
 
         grad1 = vjp_pdf(loss_values)[0]
@@ -178,21 +184,22 @@ def expect_and_grad_inner(
 
         grad = jax.tree_util.tree_map(lambda x, y: x + y, grad1, grad2)
 
-        return loss_mean, grad
+        return loss_mean, loss_error, grad
 
     loss_mean = 0
+    loss_error = 0
     grad = jax.tree_util.tree_map(lambda x: jnp.zeros_like(x, dtype=complex), params)
 
     def fill_many_losses_grads(i, carry):
-        loss_mean, grad = carry
+        loss_mean, loss_error, grad = carry
 
         samples = jax.lax.dynamic_slice(
             tσ, (i * window, 0, 0), (window, tσ.shape[-2], tσ.shape[-1])
         )
 
-        loss_means, grads = jax.vmap(get_grad, in_axes=(None, 0), out_axes=(0))(
-            params, samples
-        )
+        loss_means, loss_errors, grads = jax.vmap(
+            get_grad, in_axes=(None, 0), out_axes=(0)
+        )(params, samples)
         loss_means = loss_means[..., -1]
 
         weights_simpson_ = jax.lax.dynamic_slice(
@@ -200,7 +207,7 @@ def expect_and_grad_inner(
         )
 
         loss_mean += jnp.sum(dt * loss_means * weights_simpson_ / T)
-
+        loss_error += jnp.sum(dt * loss_errors * weights_simpson_ / T) ** 2
         grad = jax.tree_util.tree_map(
             lambda x, y: x
             + jnp.sum(
@@ -214,16 +221,16 @@ def expect_and_grad_inner(
             grads,
         )
 
-        return loss_mean, grad
+        return loss_mean, loss_error, grad
 
-    loss_mean, grad = jax.lax.fori_loop(
-        0, n_times // window, fill_many_losses_grads, (loss_mean, grad)
+    loss_mean, loss_error, grad = jax.lax.fori_loop(
+        0, n_times // window, fill_many_losses_grads, (loss_mean, loss_error, grad)
     )
+    loss_error = jnp.sqrt(loss_error)
 
     loss_stats = Stats(
         mean=loss_mean,
-        error_of_mean=0,
-        variance=0,
+        error_of_mean=loss_error,
     )
 
     return loss_stats, grad
