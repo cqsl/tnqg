@@ -1,5 +1,5 @@
 # Time-dependent Neural Quantum Galerkin
-This repository provides the accompanying code for the paper "Time-dependent Neural Galerkin Method for Quantum Dynamics" (https://arxiv.org/abs/2412.11778).
+This repository provides the accompanying code for the paper "Time-dependent Neural Galerkin Method for Quantum Dynamics" (https://doi.org/10.1103/kqvx-dl54).
 The code is based on `jax`, `flax` and `NetKet`.
 
 [![Slack](https://img.shields.io/badge/slack-chat-green.svg)](https://join.slack.com/t/mlquantum/shared_invite/zt-19wibmfdv-LLRI6i43wrLev6oQX0OfOw)
